@@ -131,7 +131,11 @@ func (s *Server) loadFrontendConfig(
 
 	frontend := config.Frontends[frontendName]
 	hostResolver := buildHostResolver(s.globalConfiguration)
-	matchers := s.pluginManager.GetMatchers()
+
+	var matchers map[string]*plugin.IMatcher
+	if s.pluginManager != nil {
+		matchers = s.pluginManager.GetMatchers()
+	}
 
 	if len(frontend.EntryPoints) == 0 {
 		return nil, fmt.Errorf("no entrypoint defined for frontend %s", frontendName)
