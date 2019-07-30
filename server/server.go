@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"github.com/containous/traefik/plugin"
 	stdlog "log"
 	"net"
 	"net/http"
@@ -113,6 +114,7 @@ type Server struct {
 	configurationListeners        []func(types.Configuration)
 	entryPoints                   map[string]EntryPoint
 	bufferPool                    httputil.BufferPool
+	pluginManager 				  *plugin.Manager
 }
 
 // EntryPoint entryPoint information (configuration + internalRouter)
@@ -187,7 +189,7 @@ func (ln tcpKeepAliveListener) Accept() (net.Conn, error) {
 }
 
 // NewServer returns an initialized Server.
-func NewServer(globalConfiguration configuration.GlobalConfiguration, provider provider.Provider, entrypoints map[string]EntryPoint) *Server {
+func NewServer(globalConfiguration configuration.GlobalConfiguration, provider provider.Provider, entrypoints map[string]EntryPoint, pluginManager *plugin.Manager) *Server {
 	server := &Server{}
 
 	server.entryPoints = entrypoints
@@ -210,6 +212,7 @@ func NewServer(globalConfiguration configuration.GlobalConfiguration, provider p
 	server.bufferPool = newBufferPool()
 
 	server.routinesPool = safe.NewPool(context.Background())
+	server.pluginManager = pluginManager
 
 	transport, err := createHTTPTransport(globalConfiguration)
 	if err != nil {

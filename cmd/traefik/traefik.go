@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"github.com/containous/traefik/plugin"
 	fmtlog "log"
 	"net/http"
 	"os"
@@ -232,7 +233,9 @@ func runCmd(globalConfiguration *configuration.GlobalConfiguration, configFile s
 		entryPoints[entryPointName] = entryPoint
 	}
 
-	svr := server.NewServer(*globalConfiguration, providerAggregator, entryPoints)
+	pluginManager := loadPluginManager(*globalConfiguration)
+	
+	svr := server.NewServer(*globalConfiguration, providerAggregator, entryPoints, pluginManager)
 	if acmeprovider != nil && acmeprovider.OnHostRule {
 		acmeprovider.SetConfigListenerChan(make(chan types.Configuration))
 		svr.AddListener(acmeprovider.ListenConfiguration)
@@ -276,6 +279,33 @@ func runCmd(globalConfiguration *configuration.GlobalConfiguration, configFile s
 	svr.Wait()
 	log.Info("Shutting down")
 	logrus.Exit(0)
+}
+
+func loadPluginManager(gc configuration.GlobalConfiguration) *plugin.Manager {
+	manager := plugin.NewManager()
+
+	type plugin struct {
+		pluginId   string
+		pluginPath string
+	}
+
+	var plugins []plugin
+
+	if gc.Plugin != nil && gc.Plugin.Matchers != nil {
+		for matcherId, matcher := range *gc.Plugin.Matchers {
+			plugins = append(plugins, plugin{pluginId: matcherId, pluginPath: matcher.Path})
+		}
+	}
+
+	for _, p := range plugins {
+		if err := manager.Load(p.pluginId, p.pluginPath); err != nil {
+			log.Errorf("Error loading plugin: %s", err)
+			continue
+		}
+		log.Infof("Plugin loaded %+v", p)
+	}
+
+	return manager
 }
 
 func configureLogging(globalConfiguration *configuration.GlobalConfiguration) {

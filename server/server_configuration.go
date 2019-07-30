@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/containous/traefik/plugin"
 	"net"
 	"net/http"
 	"reflect"
@@ -130,6 +131,7 @@ func (s *Server) loadFrontendConfig(
 
 	frontend := config.Frontends[frontendName]
 	hostResolver := buildHostResolver(s.globalConfiguration)
+	matchers := s.pluginManager.GetMatchers()
 
 	if len(frontend.EntryPoints) == 0 {
 		return nil, fmt.Errorf("no entrypoint defined for frontend %s", frontendName)
@@ -197,7 +199,7 @@ func (s *Server) loadFrontendConfig(
 				frontend.Backend, entryPointName, providerName, frontendName, frontendHash)
 		}
 
-		serverRoute, err := buildServerRoute(serverEntryPoints[entryPointName], frontendName, frontend, hostResolver)
+		serverRoute, err := buildServerRoute(serverEntryPoints[entryPointName], frontendName, frontend, hostResolver, matchers)
 		if err != nil {
 			return nil, err
 		}
@@ -274,12 +276,12 @@ func (s *Server) buildForwarder(entryPointName string, entryPoint *configuration
 	return fwd, nil
 }
 
-func buildServerRoute(serverEntryPoint *serverEntryPoint, frontendName string, frontend *types.Frontend, hostResolver *hostresolver.Resolver) (*types.ServerRoute, error) {
+func buildServerRoute(serverEntryPoint *serverEntryPoint, frontendName string, frontend *types.Frontend, hostResolver *hostresolver.Resolver, matchers map[string]*plugin.IMatcher) (*types.ServerRoute, error) {
 	serverRoute := &types.ServerRoute{Route: serverEntryPoint.httpRouter.GetHandler().NewRoute().Name(frontendName)}
 
 	priority := 0
 	for routeName, route := range frontend.Routes {
-		rls := rules.Rules{Route: serverRoute, HostResolver: hostResolver}
+		rls := rules.Rules{Route: serverRoute, HostResolver: hostResolver, Matchers: matchers}
 		newRoute, err := rls.Parse(route.Rule)
 		if err != nil {
 			return nil, fmt.Errorf("error creating route for frontend %s: %v", frontendName, err)

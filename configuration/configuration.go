@@ -2,6 +2,7 @@ package configuration
 
 import (
 	"fmt"
+	"github.com/containous/traefik/plugin"
 	"strings"
 	"time"
 
@@ -110,6 +111,7 @@ type GlobalConfiguration struct {
 	Metrics                   *types.Metrics          `description:"Enable a metrics exporter" export:"true"`
 	Ping                      *ping.Handler           `description:"Enable ping" export:"true"`
 	HostResolver              *HostResolverConfig     `description:"Enable CNAME Flattening" export:"true"`
+	Plugin 					  *plugin.Plugin		  `description:"Enable plugin (dynamic library)"`
 }
 
 // WebCompatibility is a configuration to handle compatibility with deprecated web provider options

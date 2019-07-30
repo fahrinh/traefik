@@ -3,6 +3,7 @@ package rules
 import (
 	"errors"
 	"fmt"
+	"github.com/containous/traefik/plugin"
 	"net/http"
 	"reflect"
 	"sort"
@@ -20,6 +21,7 @@ type Rules struct {
 	Route        *types.ServerRoute
 	err          error
 	HostResolver *hostresolver.Resolver
+	Matchers     map[string]*plugin.IMatcher
 }
 
 func (r *Rules) host(hosts ...string) *mux.Route {
@@ -185,6 +187,32 @@ func (r *Rules) query(query ...string) *mux.Route {
 	return r.Route.Route.Queries(queries...)
 }
 
+func (r *Rules) matcher(matcherIds ...string) *mux.Route {
+
+	var matchers []plugin.IMatcher
+
+	for _, matcherId := range matcherIds {
+		matcher := r.Matchers[matcherId]
+		if matcher == nil {
+			log.Errorf("Matcher plugin for '%s' not available", matcherIds[0])
+			return r.Route.Route
+		}
+
+		instMatcher := *matcher
+		matchers = append(matchers, instMatcher)
+	}
+
+
+	return r.Route.Route.MatcherFunc(func(req *http.Request, route *mux.RouteMatch) bool {
+		for _, matcher := range matchers {
+			if matcher.MatcherFunc(req) {
+				return true
+			}
+		}
+		return false
+	})
+}
+
 func (r *Rules) parseRules(expression string, onRule func(functionName string, function interface{}, arguments []string) error) error {
 	functions := map[string]interface{}{
 		"Host":                 r.host,
@@ -202,6 +230,7 @@ func (r *Rules) parseRules(expression string, onRule func(functionName string, f
 		"ReplacePath":          r.replacePath,
 		"ReplacePathRegex":     r.replacePathRegex,
 		"Query":                r.query,
+		"Matcher":				r.matcher,
 	}
 
 	if len(expression) == 0 {
