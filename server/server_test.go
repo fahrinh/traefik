@@ -82,7 +82,7 @@ func TestPrepareServerTimeouts(t *testing.T) {
 			}
 			router := middlewares.NewHandlerSwitcher(mux.NewRouter())
 
-			srv := NewServer(test.globalConfig, nil, nil)
+			srv := NewServer(test.globalConfig, nil, nil, nil)
 			httpServer, _, err := srv.prepareServer(entryPointName, entryPoint, router, nil)
 			require.NoError(t, err, "Unexpected error when preparing srv")
 
@@ -215,7 +215,7 @@ func setupListenProvider(throttleDuration time.Duration) (server *Server, stop c
 		ProvidersThrottleDuration: flaeg.Duration(throttleDuration),
 	}
 
-	server = NewServer(globalConfig, nil, nil)
+	server = NewServer(globalConfig, nil, nil, nil)
 	go server.listenProviders(stop)
 
 	return server, stop, invokeStopChan
@@ -332,7 +332,7 @@ func TestServerResponseEmptyBackend(t *testing.T) {
 			}
 			dynamicConfigs := types.Configurations{"config": test.config(testServer.URL)}
 
-			srv := NewServer(globalConfig, nil, entryPointsConfig)
+			srv := NewServer(globalConfig, nil, entryPointsConfig, nil)
 			entryPoints := srv.loadConfig(dynamicConfigs, globalConfig)
 
 			responseRecorder := &httptest.ResponseRecorder{}

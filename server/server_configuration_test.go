@@ -133,7 +133,7 @@ func TestServerLoadConfigHealthCheckOptions(t *testing.T) {
 					},
 				}
 
-				srv := NewServer(globalConfig, nil, entryPoints)
+				srv := NewServer(globalConfig, nil, entryPoints, nil)
 
 				_ = srv.loadConfig(dynamicConfigs, globalConfig)
 
@@ -185,7 +185,7 @@ func TestServerLoadConfigEmptyBasicAuth(t *testing.T) {
 		}
 	}
 
-	srv := NewServer(globalConfig, nil, entryPoints)
+	srv := NewServer(globalConfig, nil, entryPoints, nil)
 	_ = srv.loadConfig(dynamicConfigs, globalConfig)
 }
 
@@ -211,7 +211,7 @@ func TestServerLoadCertificateWithDefaultEntryPoint(t *testing.T) {
 		},
 	}
 
-	srv := NewServer(globalConfig, nil, entryPoints)
+	srv := NewServer(globalConfig, nil, entryPoints, nil)
 
 	mapEntryPoints := srv.loadConfig(dynamicConfigs, globalConfig)
 	if !mapEntryPoints["https"].certs.ContainsCertificates() {
@@ -255,7 +255,7 @@ func TestReuseBackend(t *testing.T) {
 		),
 	}
 
-	srv := NewServer(globalConfig, nil, entryPoints)
+	srv := NewServer(globalConfig, nil, entryPoints, nil)
 
 	serverEntryPoints := srv.loadConfig(dynamicConfigs, globalConfig)
 
@@ -285,7 +285,7 @@ func TestThrottleProviderConfigReload(t *testing.T) {
 	}()
 
 	globalConfig := configuration.GlobalConfiguration{}
-	server := NewServer(globalConfig, nil, nil)
+	server := NewServer(globalConfig, nil, nil, nil)
 
 	go server.throttleProviderConfigReload(throttleDuration, publishConfig, providerConfig, stop)
 

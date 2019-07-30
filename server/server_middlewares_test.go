@@ -283,7 +283,7 @@ func TestServerGenericFrontendAuthFail(t *testing.T) {
 		},
 	}
 
-	srv := NewServer(globalConfig, nil, nil)
+	srv := NewServer(globalConfig, nil, nil, nil)
 
 	_ = srv.loadConfig(dynamicConfigs, globalConfig)
 }
