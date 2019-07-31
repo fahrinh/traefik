@@ -293,6 +293,9 @@ func loadPluginManager(gc configuration.GlobalConfiguration) *plugin.Manager {
 
 	if gc.Plugin != nil && gc.Plugin.Matchers != nil {
 		for matcherId, matcher := range *gc.Plugin.Matchers {
+			if matcher.Path == "" {
+				continue
+			}
 			plugins = append(plugins, plugin{pluginId: matcherId, pluginPath: matcher.Path})
 		}
 	}
