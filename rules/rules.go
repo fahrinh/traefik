@@ -195,11 +195,10 @@ func (r *Rules) matcher(matcherIds ...string) *mux.Route {
 		matcher := r.Matchers[matcherId]
 		if matcher == nil {
 			log.Errorf("Matcher plugin for '%s' not available", matcherIds[0])
-			return r.Route.Route
+		} else {
+			instMatcher := *matcher
+			matchers = append(matchers, instMatcher)
 		}
-
-		instMatcher := *matcher
-		matchers = append(matchers, instMatcher)
 	}
 
 
